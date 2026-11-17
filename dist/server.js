@@ -10,8 +10,13 @@ import { AuthRoutes } from './modules/auth/auth.route.js';
 import { DoctorRoutes } from './modules/doctor/doctor.route.js';
 import { PatientRoutes } from './modules/patient/patient.route.js';
 import { DashboardRoutes } from './modules/dashboard/dashboard.route.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // load and validate env
 dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 validateEnv();
 const app = express();
 const PORT = process.env.PORT || 5000;

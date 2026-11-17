@@ -12,20 +12,22 @@ import { DoctorRoutes } from './modules/doctor/doctor.route.js';
 import { PatientRoutes } from './modules/patient/patient.route.js';
 import { DashboardRoutes } from './modules/dashboard/dashboard.route.js';
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // load and validate env
 dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 validateEnv();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // global middlewares
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://127.0.0.1:3000',
-  process.env.CLIENT_URL,
-].filter(Boolean);
+const allowedOrigins = [process.env.CLIENT_URL].filter(Boolean);
 
 app.use(
   cors({
