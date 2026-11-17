@@ -1,5 +1,6 @@
 import { DoctorService } from './doctor.service.js';
 import { sendResponse } from '../../utils/sendResponse.js';
+import { ApiError } from '../../utils/ApiError.js';
 // create new doctor
 const createDoctor = async (req, res, next) => {
     try {
@@ -47,7 +48,7 @@ const getDoctorById = async (req, res, next) => {
         next(error);
     }
 };
-// update doctor
+// update doctor by id
 const updateDoctor = async (req, res, next) => {
     try {
         const id = req.params.id;
@@ -63,7 +64,26 @@ const updateDoctor = async (req, res, next) => {
         next(error);
     }
 };
-// delete doctor
+// update doctor avatar
+const updateAvatar = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        if (!req.file || !req.file.buffer) {
+            throw new ApiError(400, 'please upload an image file');
+        }
+        const result = await DoctorService.updateDoctorAvatar(id, req.file.buffer);
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: 'doctor avatar updated successfully',
+            data: result,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+// delete doctor by id
 const deleteDoctor = async (req, res, next) => {
     try {
         const id = req.params.id;
@@ -79,7 +99,7 @@ const deleteDoctor = async (req, res, next) => {
         next(error);
     }
 };
-// add patient under a specific doctor
+// add patient to doctor
 const addPatientToDoctor = async (req, res, next) => {
     try {
         const id = req.params.id;
@@ -87,7 +107,7 @@ const addPatientToDoctor = async (req, res, next) => {
         sendResponse(res, {
             statusCode: 201,
             success: true,
-            message: 'patient added under doctor successfully',
+            message: 'patient added to doctor successfully',
             data: result,
         });
     }
@@ -95,7 +115,7 @@ const addPatientToDoctor = async (req, res, next) => {
         next(error);
     }
 };
-// remove patient from a doctor's list
+// remove patient from doctor
 const removePatientFromDoctor = async (req, res, next) => {
     try {
         const id = req.params.id;
@@ -147,6 +167,7 @@ export const DoctorController = {
     getAllDoctors,
     getDoctorById,
     updateDoctor,
+    updateAvatar,
     deleteDoctor,
     addPatientToDoctor,
     removePatientFromDoctor,

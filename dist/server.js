@@ -21,12 +21,7 @@ validateEnv();
 const app = express();
 const PORT = process.env.PORT || 5000;
 // global middlewares
-const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://127.0.0.1:3000',
-    process.env.CLIENT_URL,
-].filter(Boolean);
+const allowedOrigins = [process.env.CLIENT_URL].filter(Boolean);
 app.use(cors({
     origin: (origin, callback) => {
         // allow requests with no origin (like mobile apps, curl, postman)

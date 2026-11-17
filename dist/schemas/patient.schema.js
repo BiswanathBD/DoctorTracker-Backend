@@ -44,6 +44,16 @@ export const patientSchema = new Schema({
         default: Date.now,
         index: true,
     },
+    avatar: {
+        url: {
+            type: String,
+            default: '',
+        },
+        key: {
+            type: String,
+            default: '',
+        },
+    },
 }, {
     timestamps: true,
 });

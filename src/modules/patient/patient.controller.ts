@@ -1,6 +1,7 @@
 import { type Request, type Response, type NextFunction } from 'express';
 import { PatientService } from './patient.service.js';
 import { sendResponse } from '../../utils/sendResponse.js';
+import { ApiError } from '../../utils/ApiError.js';
 
 // create new patient
 const createPatient = async (req: Request, res: Response, next: NextFunction) => {
@@ -52,7 +53,7 @@ const getPatientById = async (req: Request, res: Response, next: NextFunction) =
   }
 };
 
-// update patient
+// update patient by id
 const updatePatient = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string;
@@ -69,7 +70,28 @@ const updatePatient = async (req: Request, res: Response, next: NextFunction) =>
   }
 };
 
-// delete patient
+// update patient avatar
+const updateAvatar = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = req.params.id as string;
+    if (!req.file || !req.file.buffer) {
+      throw new ApiError(400, 'please upload an image file');
+    }
+
+    const result = await PatientService.updatePatientAvatar(id, req.file.buffer);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'patient avatar updated successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// delete patient by id
 const deletePatient = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string;
@@ -107,6 +129,7 @@ export const PatientController = {
   getAllPatients,
   getPatientById,
   updatePatient,
+  updateAvatar,
   deletePatient,
   getConditions,
 };

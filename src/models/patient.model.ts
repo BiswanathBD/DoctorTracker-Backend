@@ -10,6 +10,10 @@ export interface IPatient extends Document {
   condition: string;
   doctorId: Types.ObjectId;
   admissionDate: Date;
+  avatar?: {
+    url: string;
+    key: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }

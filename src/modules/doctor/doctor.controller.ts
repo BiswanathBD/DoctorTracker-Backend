@@ -1,6 +1,7 @@
 import { type Request, type Response, type NextFunction } from 'express';
 import { DoctorService } from './doctor.service.js';
 import { sendResponse } from '../../utils/sendResponse.js';
+import { ApiError } from '../../utils/ApiError.js';
 
 // create new doctor
 const createDoctor = async (req: Request, res: Response, next: NextFunction) => {
@@ -52,7 +53,7 @@ const getDoctorById = async (req: Request, res: Response, next: NextFunction) =>
   }
 };
 
-// update doctor
+// update doctor by id
 const updateDoctor = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string;
@@ -69,7 +70,28 @@ const updateDoctor = async (req: Request, res: Response, next: NextFunction) => 
   }
 };
 
-// delete doctor
+// update doctor avatar
+const updateAvatar = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = req.params.id as string;
+    if (!req.file || !req.file.buffer) {
+      throw new ApiError(400, 'please upload an image file');
+    }
+
+    const result = await DoctorService.updateDoctorAvatar(id, req.file.buffer);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'doctor avatar updated successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// delete doctor by id
 const deleteDoctor = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string;
@@ -86,7 +108,7 @@ const deleteDoctor = async (req: Request, res: Response, next: NextFunction) => 
   }
 };
 
-// add patient under a specific doctor
+// add patient to doctor
 const addPatientToDoctor = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string;
@@ -95,7 +117,7 @@ const addPatientToDoctor = async (req: Request, res: Response, next: NextFunctio
     sendResponse(res, {
       statusCode: 201,
       success: true,
-      message: 'patient added under doctor successfully',
+      message: 'patient added to doctor successfully',
       data: result,
     });
   } catch (error) {
@@ -103,7 +125,7 @@ const addPatientToDoctor = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-// remove patient from a doctor's list
+// remove patient from doctor
 const removePatientFromDoctor = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string;
@@ -158,6 +180,7 @@ export const DoctorController = {
   getAllDoctors,
   getDoctorById,
   updateDoctor,
+  updateAvatar,
   deleteDoctor,
   addPatientToDoctor,
   removePatientFromDoctor,

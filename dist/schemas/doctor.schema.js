@@ -32,6 +32,16 @@ export const doctorSchema = new Schema({
         trim: true,
         index: true,
     },
+    avatar: {
+        url: {
+            type: String,
+            default: '',
+        },
+        key: {
+            type: String,
+            default: '',
+        },
+    },
 }, {
     timestamps: true,
 });

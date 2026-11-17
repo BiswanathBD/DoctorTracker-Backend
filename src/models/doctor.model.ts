@@ -7,6 +7,10 @@ export interface IDoctor extends Document {
   hospital: string;
   phone: string;
   email: string;
+  avatar?: {
+    url: string;
+    key: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }

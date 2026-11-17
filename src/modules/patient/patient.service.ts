@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { Patient, type IPatient } from '../../models/patient.model.js';
 import { Doctor } from '../../models/doctor.model.js';
 import { ApiError } from '../../utils/ApiError.js';
+import { uploadToCloudinary, deleteFromCloudinary } from '../../utils/fileUploader.js';
 
 interface PatientQueryParams {
   page?: number | string;
@@ -29,7 +30,7 @@ const createPatient = async (payload: Partial<IPatient>): Promise<IPatient> => {
   }
 
   const patient = await Patient.create(payload);
-  const populated = await patient.populate('doctorId', 'name specialization hospital email phone');
+  const populated = await patient.populate('doctorId', 'name specialization hospital email phone avatar');
   return populated;
 };
 
@@ -53,17 +54,17 @@ const getAllPatients = async (query: PatientQueryParams) => {
     ];
   }
 
-  // condition filter
+  // filter by condition
   if (query.condition) {
-    filter.condition = new RegExp(`^${query.condition.trim()}$`, 'i');
+    filter.condition = { $regex: new RegExp(`^${query.condition.trim()}$`, 'i') };
   }
 
-  // gender filter
+  // filter by gender
   if (query.gender) {
     filter.gender = query.gender;
   }
 
-  // doctor id filter
+  // filter by assigned doctor
   if (query.doctorId) {
     if (!Types.ObjectId.isValid(query.doctorId)) {
       throw new ApiError(400, 'invalid doctor id filter');
@@ -71,7 +72,7 @@ const getAllPatients = async (query: PatientQueryParams) => {
     filter.doctorId = new Types.ObjectId(query.doctorId);
   }
 
-  // date range filter on admissionDate or createdAt
+  // filter by admission date range
   if (query.startDate || query.endDate) {
     filter.admissionDate = {};
     if (query.startDate) {
@@ -84,20 +85,18 @@ const getAllPatients = async (query: PatientQueryParams) => {
     }
   }
 
-  // sort options
-  const sortBy = query.sortBy || 'admissionDate';
+  // dynamic sorting
+  const sortBy = query.sortBy || 'createdAt';
   const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
-  const sortOptions: Record<string, 1 | -1> = { [sortBy]: sortOrder };
 
-  // query total and paginated docs concurrently
-  const [total, data] = await Promise.all([
-    Patient.countDocuments(filter),
+  const [patients, total] = await Promise.all([
     Patient.find(filter)
-      .populate('doctorId', 'name specialization hospital email phone')
-      .sort(sortOptions)
+      .populate('doctorId', 'name specialization hospital email phone avatar')
+      .sort({ [sortBy]: sortOrder })
       .skip(skip)
       .limit(limit)
       .lean(),
+    Patient.countDocuments(filter),
   ]);
 
   const totalPages = Math.ceil(total / limit);
@@ -109,7 +108,7 @@ const getAllPatients = async (query: PatientQueryParams) => {
       total,
       totalPages,
     },
-    data,
+    data: patients,
   };
 };
 
@@ -120,7 +119,7 @@ const getPatientById = async (id: string) => {
   }
 
   const patient = await Patient.findById(id)
-    .populate('doctorId', 'name specialization hospital email phone')
+    .populate('doctorId', 'name specialization hospital email phone avatar')
     .lean();
 
   if (!patient) {
@@ -150,13 +149,35 @@ const updatePatient = async (id: string, payload: Partial<IPatient>) => {
   const updatedPatient = await Patient.findByIdAndUpdate(id, payload, {
     new: true,
     runValidators: true,
-  }).populate('doctorId', 'name specialization hospital email phone');
+  }).populate('doctorId', 'name specialization hospital email phone avatar');
 
   if (!updatedPatient) {
     throw new ApiError(404, 'patient not found');
   }
 
   return updatedPatient;
+};
+
+// update patient avatar
+const updatePatientAvatar = async (patientId: string, fileBuffer: Buffer) => {
+  if (!Types.ObjectId.isValid(patientId)) {
+    throw new ApiError(400, 'invalid patient id');
+  }
+
+  const patient = await Patient.findById(patientId);
+  if (!patient) {
+    throw new ApiError(404, 'patient not found');
+  }
+
+  if (patient.avatar?.key) {
+    await deleteFromCloudinary(patient.avatar.key);
+  }
+
+  const { url, key } = await uploadToCloudinary(fileBuffer, 'doctor-tracker/patients');
+  patient.avatar = { url, key };
+  await patient.save();
+
+  return patient;
 };
 
 // delete patient by id
@@ -168,6 +189,10 @@ const deletePatient = async (id: string) => {
   const deletedPatient = await Patient.findByIdAndDelete(id);
   if (!deletedPatient) {
     throw new ApiError(404, 'patient not found');
+  }
+
+  if (deletedPatient.avatar?.key) {
+    await deleteFromCloudinary(deletedPatient.avatar.key);
   }
 
   return deletedPatient;
@@ -184,6 +209,7 @@ export const PatientService = {
   getAllPatients,
   getPatientById,
   updatePatient,
+  updatePatientAvatar,
   deletePatient,
   getConditions,
 };

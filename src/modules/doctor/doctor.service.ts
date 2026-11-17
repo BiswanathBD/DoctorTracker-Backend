@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { Doctor, type IDoctor } from '../../models/doctor.model.js';
 import { Patient, type IPatient } from '../../models/patient.model.js';
 import { ApiError } from '../../utils/ApiError.js';
+import { uploadToCloudinary, deleteFromCloudinary } from '../../utils/fileUploader.js';
 
 interface QueryParams {
   page?: number | string;
@@ -49,17 +50,17 @@ const getAllDoctors = async (query: QueryParams) => {
     ];
   }
 
-  // exact or regex filter for specialization
+  // filter by specialization
   if (query.specialization) {
-    filter.specialization = new RegExp(`^${query.specialization.trim()}$`, 'i');
+    filter.specialization = { $regex: new RegExp(`^${query.specialization.trim()}$`, 'i') };
   }
 
-  // filter for hospital
+  // filter by hospital
   if (query.hospital) {
-    filter.hospital = new RegExp(`^${query.hospital.trim()}$`, 'i');
+    filter.hospital = { $regex: new RegExp(`^${query.hospital.trim()}$`, 'i') };
   }
 
-  // date range filter on createdAt
+  // filter by date range
   if (query.startDate || query.endDate) {
     filter.createdAt = {};
     if (query.startDate) {
@@ -72,47 +73,38 @@ const getAllDoctors = async (query: QueryParams) => {
     }
   }
 
-  // sort options
+  // dynamic sorting
   const sortBy = query.sortBy || 'createdAt';
   const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
   const sortOptions: Record<string, 1 | -1> = { [sortBy]: sortOrder };
 
-  // aggregation pipeline for optimized lookup with patient counts
-  const pipeline = [
+  // aggregation pipeline with patient count lookup
+  const doctors = await Doctor.aggregate([
     { $match: filter },
     { $sort: sortOptions },
+    { $skip: skip },
+    { $limit: limit },
     {
-      $facet: {
-        data: [
-          { $skip: skip },
-          { $limit: limit },
-          {
-            $lookup: {
-              from: 'patients',
-              localField: '_id',
-              foreignField: 'doctorId',
-              as: 'patients',
-            },
-          },
-          {
-            $addFields: {
-              patientCount: { $size: '$patients' },
-            },
-          },
-          {
-            $project: {
-              patients: 0,
-            },
-          },
-        ],
-        totalCount: [{ $count: 'count' }],
+      $lookup: {
+        from: 'patients',
+        localField: '_id',
+        foreignField: 'doctorId',
+        as: 'patients',
       },
     },
-  ];
+    {
+      $addFields: {
+        patientCount: { $size: '$patients' },
+      },
+    },
+    {
+      $project: {
+        patients: 0,
+      },
+    },
+  ]);
 
-  const result = await Doctor.aggregate(pipeline);
-  const data = result[0]?.data || [];
-  const total = result[0]?.totalCount[0]?.count || 0;
+  const total = await Doctor.countDocuments(filter);
   const totalPages = Math.ceil(total / limit);
 
   return {
@@ -122,11 +114,11 @@ const getAllDoctors = async (query: QueryParams) => {
       total,
       totalPages,
     },
-    data,
+    data: doctors,
   };
 };
 
-// get single doctor by id with full patient list
+// get single doctor by id with assigned patient list
 const getDoctorById = async (id: string) => {
   if (!Types.ObjectId.isValid(id)) {
     throw new ApiError(400, 'invalid doctor id');
@@ -176,6 +168,28 @@ const updateDoctor = async (id: string, payload: Partial<IDoctor>): Promise<IDoc
   return updatedDoctor;
 };
 
+// update doctor avatar
+const updateDoctorAvatar = async (doctorId: string, fileBuffer: Buffer) => {
+  if (!Types.ObjectId.isValid(doctorId)) {
+    throw new ApiError(400, 'invalid doctor id');
+  }
+
+  const doctor = await Doctor.findById(doctorId);
+  if (!doctor) {
+    throw new ApiError(404, 'doctor not found');
+  }
+
+  if (doctor.avatar?.key) {
+    await deleteFromCloudinary(doctor.avatar.key);
+  }
+
+  const { url, key } = await uploadToCloudinary(fileBuffer, 'doctor-tracker/doctors');
+  doctor.avatar = { url, key };
+  await doctor.save();
+
+  return doctor;
+};
+
 // delete doctor and remove assigned patients
 const deleteDoctor = async (id: string): Promise<IDoctor> => {
   if (!Types.ObjectId.isValid(id)) {
@@ -185,6 +199,10 @@ const deleteDoctor = async (id: string): Promise<IDoctor> => {
   const deletedDoctor = await Doctor.findByIdAndDelete(id);
   if (!deletedDoctor) {
     throw new ApiError(404, 'doctor not found');
+  }
+
+  if (deletedDoctor.avatar?.key) {
+    await deleteFromCloudinary(deletedDoctor.avatar.key);
   }
 
   // cascade delete assigned patients
@@ -248,6 +266,7 @@ export const DoctorService = {
   getAllDoctors,
   getDoctorById,
   updateDoctor,
+  updateDoctorAvatar,
   deleteDoctor,
   addPatientToDoctor,
   removePatientFromDoctor,

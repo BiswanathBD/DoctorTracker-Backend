@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { DoctorController } from './doctor.controller.js';
 import { protect } from '../../middlewares/auth.middleware.js';
+import { upload } from '../../utils/fileUploader.js';
 const router = Router();
 // protect all doctor routes with admin auth
 router.use(protect);
@@ -12,6 +13,7 @@ router.post('/', DoctorController.createDoctor);
 router.get('/', DoctorController.getAllDoctors);
 router.get('/:id', DoctorController.getDoctorById);
 router.patch('/:id', DoctorController.updateDoctor);
+router.patch('/:id/avatar', upload.single('avatar'), DoctorController.updateAvatar);
 router.delete('/:id', DoctorController.deleteDoctor);
 // nested patient assignment endpoints
 router.post('/:id/patients', DoctorController.addPatientToDoctor);
