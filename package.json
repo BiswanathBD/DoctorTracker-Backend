@@ -1,0 +1,28 @@
+{
+  "name": "doctortracker-backend",
+  "version": "1.0.0",
+  "description": "Doctor Tracker REST API",
+  "type": "module",
+  "main": "src/server.ts",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^9.12.1",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^26.6.6",
+    "nodemon": "^3.1.9",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
