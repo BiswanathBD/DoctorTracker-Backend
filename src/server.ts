@@ -8,6 +8,9 @@ import { connectDB, disconnectDB } from './config/db.js';
 import { sendResponse } from './utils/sendResponse.js';
 import { ApiError } from './utils/ApiError.js';
 import { AuthRoutes } from './modules/auth/auth.route.js';
+import { DoctorRoutes } from './modules/doctor/doctor.route.js';
+import { PatientRoutes } from './modules/patient/patient.route.js';
+import { DashboardRoutes } from './modules/dashboard/dashboard.route.js';
 
 // load and validate env
 dotenv.config();
@@ -17,9 +20,23 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // global middlewares
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3000',
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // allow requests with no origin (like mobile apps, curl, postman)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
+        return callback(null, true);
+      }
+      return callback(new Error('not allowed by cors'));
+    },
     credentials: true,
   })
 );
@@ -33,27 +50,17 @@ app.get('/', (req: Request, res: Response) => {
     success: true,
     message: 'welcome to doctor tracker api',
     data: {
-      documentation: '/api/health',
+      documentation: '/',
       version: '1.0.0',
-    },
-  });
-});
-
-// health check
-app.get('/api/health', (req: Request, res: Response) => {
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: 'doctor tracker api is running',
-    data: {
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
     },
   });
 });
 
 // api routes
 app.use('/api/auth', AuthRoutes);
+app.use('/api/doctors', DoctorRoutes);
+app.use('/api/patients', PatientRoutes);
+app.use('/api/dashboard', DashboardRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response, next: NextFunction) => {
