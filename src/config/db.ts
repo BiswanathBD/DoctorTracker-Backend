@@ -22,7 +22,10 @@ export const connectDB = async (): Promise<void> => {
       console.warn('mongodb disconnected');
     });
 
-    await mongoose.connect(uri);
+    // connect specifying db name
+    await mongoose.connect(uri, {
+      dbName: 'doctorTracker',
+    });
   } catch (error) {
     console.error('failed to connect to mongodb:', error);
     process.exit(1);

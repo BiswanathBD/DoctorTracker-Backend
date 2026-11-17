@@ -7,6 +7,7 @@ import { validateEnv } from './config/envValidator.js';
 import { connectDB, disconnectDB } from './config/db.js';
 import { sendResponse } from './utils/sendResponse.js';
 import { ApiError } from './utils/ApiError.js';
+import { AuthRoutes } from './modules/auth/auth.route.js';
 
 // load and validate env
 dotenv.config();
@@ -25,6 +26,19 @@ app.use(
 app.use(express.json());
 app.use(morgan('dev'));
 
+// root welcome route
+app.get('/', (req: Request, res: Response) => {
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'welcome to doctor tracker api',
+    data: {
+      documentation: '/api/health',
+      version: '1.0.0',
+    },
+  });
+});
+
 // health check
 app.get('/api/health', (req: Request, res: Response) => {
   sendResponse(res, {
@@ -37,6 +51,9 @@ app.get('/api/health', (req: Request, res: Response) => {
     },
   });
 });
+
+// api routes
+app.use('/api/auth', AuthRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -91,7 +108,7 @@ const handleExit = async (signal: string) => {
 };
 
 // handle unhandled promise rejections
-process.on('unhandledRejection', (err: any) => {
+process.on('unhandledRejection', async (err: any) => {
   console.error('unhandled rejection detected:', err);
   if (server) {
     server.close(async () => {
@@ -99,6 +116,7 @@ process.on('unhandledRejection', (err: any) => {
       process.exit(1);
     });
   } else {
+    await disconnectDB();
     process.exit(1);
   }
 });

@@ -16,7 +16,10 @@ export const connectDB = async () => {
         mongoose.connection.on('disconnected', () => {
             console.warn('mongodb disconnected');
         });
-        await mongoose.connect(uri);
+        // connect specifying db name
+        await mongoose.connect(uri, {
+            dbName: 'doctorTracker',
+        });
     }
     catch (error) {
         console.error('failed to connect to mongodb:', error);
