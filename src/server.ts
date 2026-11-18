@@ -29,11 +29,20 @@ const PORT = process.env.PORT || 5000;
 // global middlewares
 const isProduction = process.env.NODE_ENV === 'production';
 
-// in production use CLIENT_URL from env; in development use localhost:3000
+// parse origin safely (strips /login or trailing slashes)
+const parseOrigin = (urlStr: string) => {
+  try {
+    return new URL(urlStr.trim()).origin;
+  } catch {
+    return urlStr.trim().replace(/\/$/, '');
+  }
+};
+
+// in production use CLIENT_URL from env; development use local
 const allowedOrigins = isProduction
   ? (process.env.CLIENT_URL || '')
       .split(',')
-      .map((url) => url.trim().replace(/\/$/, ''))
+      .map(parseOrigin)
       .filter(Boolean)
   : ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
@@ -42,8 +51,8 @@ app.use(
     origin: (origin, callback) => {
       // allow requests with no origin (like mobile apps, curl, postman)
       if (!origin) return callback(null, true);
-      const cleanOrigin = origin.replace(/\/$/, '');
-      if (allowedOrigins.includes(cleanOrigin)) {
+      const cleanOrigin = parseOrigin(origin);
+      if (allowedOrigins.includes(cleanOrigin) || allowedOrigins.length === 0) {
         return callback(null, true);
       }
       return callback(new Error(`not allowed by cors: ${origin}`));
