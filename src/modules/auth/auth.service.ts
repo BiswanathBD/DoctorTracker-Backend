@@ -42,6 +42,8 @@ const registerAdmin = async (payload: { name: string; email: string; password: s
       email: admin.email,
       role: admin.role,
       avatar: admin.avatar,
+      createdAt: admin.createdAt,
+      updatedAt: admin.updatedAt,
     },
   };
 };
@@ -82,6 +84,8 @@ const loginAdmin = async (payload: { email: string; password: string }) => {
       email: admin.email,
       role: admin.role,
       avatar: admin.avatar,
+      createdAt: admin.createdAt,
+      updatedAt: admin.updatedAt,
     },
   };
 };
@@ -112,6 +116,8 @@ const updateAdminAvatar = async (adminId: string, fileBuffer: Buffer) => {
     email: admin.email,
     role: admin.role,
     avatar: admin.avatar,
+    createdAt: admin.createdAt,
+    updatedAt: admin.updatedAt,
   };
 };
 

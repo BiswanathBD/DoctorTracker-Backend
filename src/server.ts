@@ -27,17 +27,26 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // global middlewares
-const allowedOrigins = [process.env.CLIENT_URL].filter(Boolean);
+const isProduction = process.env.NODE_ENV === 'production';
+
+// in production use CLIENT_URL from env; in development use localhost:3000
+const allowedOrigins = isProduction
+  ? (process.env.CLIENT_URL || '')
+      .split(',')
+      .map((url) => url.trim().replace(/\/$/, ''))
+      .filter(Boolean)
+  : ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
 app.use(
   cors({
     origin: (origin, callback) => {
       // allow requests with no origin (like mobile apps, curl, postman)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
+      const cleanOrigin = origin.replace(/\/$/, '');
+      if (allowedOrigins.includes(cleanOrigin)) {
         return callback(null, true);
       }
-      return callback(new Error('not allowed by cors'));
+      return callback(new Error(`not allowed by cors: ${origin}`));
     },
     credentials: true,
   })

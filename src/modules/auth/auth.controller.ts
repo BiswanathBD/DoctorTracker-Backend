@@ -54,6 +54,7 @@ const getMe = async (req: IAuthRequest, res: Response, next: NextFunction) => {
         role: req.user.role,
         avatar: req.user.avatar,
         createdAt: req.user.createdAt,
+        updatedAt: req.user.updatedAt,
       },
     });
   } catch (error) {
