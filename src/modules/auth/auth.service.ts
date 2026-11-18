@@ -121,8 +121,35 @@ const updateAdminAvatar = async (adminId: string, fileBuffer: Buffer) => {
   };
 };
 
+// delete admin avatar
+const deleteAdminAvatar = async (adminId: string) => {
+  const admin = await Admin.findById(adminId);
+  if (!admin) {
+    throw new ApiError(404, 'admin not found');
+  }
+
+  // delete old image from cloudinary if it exists
+  if (admin.avatar && admin.avatar.key) {
+    await deleteFromCloudinary(admin.avatar.key);
+  }
+
+  admin.avatar = { url: '', key: '' };
+  await admin.save();
+
+  return {
+    id: admin._id,
+    name: admin.name,
+    email: admin.email,
+    role: admin.role,
+    avatar: admin.avatar,
+    createdAt: admin.createdAt,
+    updatedAt: admin.updatedAt,
+  };
+};
+
 export const AuthService = {
   registerAdmin,
   loginAdmin,
   updateAdminAvatar,
+  deleteAdminAvatar,
 };

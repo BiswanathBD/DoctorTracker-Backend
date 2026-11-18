@@ -10,5 +10,6 @@ router.post('/register', AuthController.register);
 router.post('/login', AuthController.login);
 router.get('/me', protect, AuthController.getMe);
 router.patch('/avatar', protect, upload.single('avatar'), AuthController.updateAvatar);
+router.delete('/avatar', protect, AuthController.deleteAvatar);
 
 export const AuthRoutes = router;

@@ -86,9 +86,30 @@ const updateAvatar = async (req: IAuthRequest, res: Response, next: NextFunction
   }
 };
 
+// handle admin avatar delete
+const deleteAvatar = async (req: IAuthRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) {
+      throw new ApiError(401, 'not authenticated');
+    }
+
+    const result = await AuthService.deleteAdminAvatar(req.user._id.toString());
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'avatar deleted successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const AuthController = {
   register,
   login,
   getMe,
   updateAvatar,
+  deleteAvatar,
 };
