@@ -56,6 +56,11 @@ export const patientSchema = new Schema(
         default: '',
       },
     },
+    note: {
+      type: String,
+      trim: true,
+      default: '',
+    },
   },
   {
     timestamps: true,

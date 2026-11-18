@@ -11,6 +11,7 @@ export interface IDoctor extends Document {
     url: string;
     key: string;
   };
+  note?: string;
   createdAt: Date;
   updatedAt: Date;
 }

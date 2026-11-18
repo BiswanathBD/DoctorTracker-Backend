@@ -44,6 +44,11 @@ export const doctorSchema = new Schema(
         default: '',
       },
     },
+    note: {
+      type: String,
+      trim: true,
+      default: '',
+    },
   },
   {
     timestamps: true,

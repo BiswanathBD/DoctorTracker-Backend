@@ -14,6 +14,7 @@ export interface IPatient extends Document {
     url: string;
     key: string;
   };
+  note?: string;
   createdAt: Date;
   updatedAt: Date;
 }
