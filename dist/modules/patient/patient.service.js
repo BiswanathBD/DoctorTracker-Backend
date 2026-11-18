@@ -138,6 +138,22 @@ const updatePatientAvatar = async (patientId, fileBuffer) => {
     await patient.save();
     return patient;
 };
+// delete patient avatar
+const deletePatientAvatar = async (patientId) => {
+    if (!Types.ObjectId.isValid(patientId)) {
+        throw new ApiError(400, 'invalid patient id');
+    }
+    const patient = await Patient.findById(patientId);
+    if (!patient) {
+        throw new ApiError(404, 'patient not found');
+    }
+    if (patient.avatar?.key) {
+        await deleteFromCloudinary(patient.avatar.key);
+    }
+    patient.avatar = { url: '', key: '' };
+    await patient.save();
+    return patient;
+};
 // delete patient by id
 const deletePatient = async (id) => {
     if (!Types.ObjectId.isValid(id)) {
@@ -163,6 +179,7 @@ export const PatientService = {
     getPatientById,
     updatePatient,
     updatePatientAvatar,
+    deletePatientAvatar,
     deletePatient,
     getConditions,
 };

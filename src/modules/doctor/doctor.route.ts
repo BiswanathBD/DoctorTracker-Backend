@@ -18,6 +18,7 @@ router.get('/', DoctorController.getAllDoctors);
 router.get('/:id', DoctorController.getDoctorById);
 router.patch('/:id', DoctorController.updateDoctor);
 router.patch('/:id/avatar', upload.single('avatar'), DoctorController.updateAvatar);
+router.delete('/:id/avatar', DoctorController.deleteAvatar);
 router.delete('/:id', DoctorController.deleteDoctor);
 
 // nested patient assignment endpoints

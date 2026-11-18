@@ -13,5 +13,6 @@ router.get('/', PatientController.getAllPatients);
 router.get('/:id', PatientController.getPatientById);
 router.patch('/:id', PatientController.updatePatient);
 router.patch('/:id/avatar', upload.single('avatar'), PatientController.updateAvatar);
+router.delete('/:id/avatar', PatientController.deleteAvatar);
 router.delete('/:id', PatientController.deletePatient);
 export const PatientRoutes = router;

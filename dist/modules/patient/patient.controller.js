@@ -83,6 +83,22 @@ const updateAvatar = async (req, res, next) => {
         next(error);
     }
 };
+// delete patient avatar
+const deleteAvatar = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const result = await PatientService.deletePatientAvatar(id);
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: 'patient avatar deleted successfully',
+            data: result,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
 // delete patient by id
 const deletePatient = async (req, res, next) => {
     try {
@@ -120,6 +136,7 @@ export const PatientController = {
     getPatientById,
     updatePatient,
     updateAvatar,
+    deleteAvatar,
     deletePatient,
     getConditions,
 };

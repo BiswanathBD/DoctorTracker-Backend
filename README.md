@@ -1,7 +1,7 @@
 # Doctor Tracker — Backend REST API
 
 ## Description
-Doctor Tracker is a secure, high-performance administrative healthcare API designed to streamline doctor management, patient records, and clinical analytics. Engineered with Node.js, Express, TypeScript, and MongoDB Atlas, the system provides JWT-authenticated administrative endpoints, aggregated workload reporting, robust search and multi-criteria filtering, and automatic Cloudinary avatar asset lifecycle management.
+Doctor Tracker is a secure, high-performance administrative healthcare API designed to streamline doctor management, patient records, and clinical analytics. Engineered with Node.js, Express, TypeScript, and MongoDB Atlas, the system provides JWT-authenticated administrative endpoints, aggregated capacity reporting, robust search and multi-criteria filtering, and automatic Cloudinary avatar asset lifecycle management.
 
 ---
 
@@ -88,7 +88,7 @@ flowchart TD
 - **Authentication (`/api/auth`)**: Register, login, profile inspection, and avatar upload with automatic cleanup of replaced assets.
 - **Doctor Management (`/api/doctors`)**: CRUD operations, multi-field search, date and hospital filtering, pagination with `$facet`, nested patient assignment, and patient detachment.
 - **Patient Management (`/api/patients`)**: List all patients with search, condition filtering, doctor attribution, date-wise filtering, and record updates.
-- **Dashboard Analytics (`/api/dashboard`)**: Aggregated metrics including total counts, patient-to-doctor ratios, doctor workload distributions, condition breakdowns, and 30-day admission trends.
+- **Dashboard Analytics (`/api/dashboard`)**: Aggregated metrics including total counts, patient-to-doctor ratios, doctor patient distributions, condition breakdowns, and 30-day admission trends.
 
 ---
 

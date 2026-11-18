@@ -190,6 +190,27 @@ const updateDoctorAvatar = async (doctorId: string, fileBuffer: Buffer) => {
   return doctor;
 };
 
+// delete doctor avatar
+const deleteDoctorAvatar = async (doctorId: string) => {
+  if (!Types.ObjectId.isValid(doctorId)) {
+    throw new ApiError(400, 'invalid doctor id');
+  }
+
+  const doctor = await Doctor.findById(doctorId);
+  if (!doctor) {
+    throw new ApiError(404, 'doctor not found');
+  }
+
+  if (doctor.avatar?.key) {
+    await deleteFromCloudinary(doctor.avatar.key);
+  }
+
+  doctor.avatar = { url: '', key: '' };
+  await doctor.save();
+
+  return doctor;
+};
+
 // delete doctor and remove assigned patients
 const deleteDoctor = async (id: string): Promise<IDoctor> => {
   if (!Types.ObjectId.isValid(id)) {
@@ -267,6 +288,7 @@ export const DoctorService = {
   getDoctorById,
   updateDoctor,
   updateDoctorAvatar,
+  deleteDoctorAvatar,
   deleteDoctor,
   addPatientToDoctor,
   removePatientFromDoctor,

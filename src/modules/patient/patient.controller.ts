@@ -91,6 +91,23 @@ const updateAvatar = async (req: Request, res: Response, next: NextFunction) => 
   }
 };
 
+// delete patient avatar
+const deleteAvatar = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = req.params.id as string;
+    const result = await PatientService.deletePatientAvatar(id);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'patient avatar deleted successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // delete patient by id
 const deletePatient = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -130,6 +147,7 @@ export const PatientController = {
   getPatientById,
   updatePatient,
   updateAvatar,
+  deleteAvatar,
   deletePatient,
   getConditions,
 };
