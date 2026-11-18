@@ -15,6 +15,8 @@ router.get('/conditions', PatientController.getConditions);
 router.post('/', PatientController.createPatient);
 router.get('/', PatientController.getAllPatients);
 router.get('/:id', PatientController.getPatientById);
+router.patch('/:id/release', PatientController.releasePatient);
+router.patch('/:id/readmit', PatientController.readmitPatient);
 router.patch('/:id', PatientController.updatePatient);
 router.patch('/:id/avatar', upload.single('avatar'), PatientController.updateAvatar);
 router.delete('/:id/avatar', PatientController.deleteAvatar);

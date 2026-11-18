@@ -38,12 +38,23 @@ export const patientSchema = new Schema(
     doctorId: {
       type: Schema.Types.ObjectId,
       ref: 'Doctor',
-      required: [true, 'assigned doctor id is required'],
+      required: false,
+      default: null,
       index: true,
     },
     admissionDate: {
       type: Date,
       default: Date.now,
+      index: true,
+    },
+    releaseDate: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+    isReleased: {
+      type: Boolean,
+      default: false,
       index: true,
     },
     avatar: {

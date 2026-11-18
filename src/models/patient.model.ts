@@ -8,8 +8,10 @@ export interface IPatient extends Document {
   phone: string;
   email?: string;
   condition: string;
-  doctorId: Types.ObjectId;
+  doctorId?: Types.ObjectId | null;
   admissionDate: Date;
+  releaseDate?: Date | null;
+  isReleased: boolean;
   avatar?: {
     url: string;
     key: string;

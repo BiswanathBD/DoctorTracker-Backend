@@ -141,6 +141,42 @@ const getConditions = async (req: Request, res: Response, next: NextFunction) =>
   }
 };
 
+// release patient
+const releasePatient = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = req.params.id as string;
+    const { releaseDate, note } = req.body;
+    const result = await PatientService.releasePatient(id, releaseDate, note);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'patient released successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// readmit patient
+const readmitPatient = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = req.params.id as string;
+    const { doctorId } = req.body;
+    const result = await PatientService.readmitPatient(id, doctorId);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'patient readmitted successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const PatientController = {
   createPatient,
   getAllPatients,
@@ -149,5 +185,7 @@ export const PatientController = {
   updateAvatar,
   deleteAvatar,
   deletePatient,
+  releasePatient,
+  readmitPatient,
   getConditions,
 };

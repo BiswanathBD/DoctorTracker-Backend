@@ -13,20 +13,24 @@ interface PatientQueryParams {
   doctorId?: string;
   startDate?: string;
   endDate?: string;
+  isReleased?: string | boolean;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }
 
 // create a new patient
 const createPatient = async (payload: Partial<IPatient>): Promise<IPatient> => {
-  if (!payload.doctorId || !Types.ObjectId.isValid(payload.doctorId.toString())) {
-    throw new ApiError(400, 'valid doctor id is required');
-  }
-
-  // verify assigned doctor exists
-  const doctorExists = await Doctor.exists({ _id: payload.doctorId });
-  if (!doctorExists) {
-    throw new ApiError(404, 'assigned doctor not found');
+  // if doctorId is provided, verify assigned doctor exists
+  if (payload.doctorId) {
+    if (!Types.ObjectId.isValid(payload.doctorId.toString())) {
+      throw new ApiError(400, 'valid doctor id is required');
+    }
+    const doctorExists = await Doctor.exists({ _id: payload.doctorId });
+    if (!doctorExists) {
+      throw new ApiError(404, 'assigned doctor not found');
+    }
+  } else {
+    payload.doctorId = null;
   }
 
   const patient = await Patient.create(payload);
@@ -70,6 +74,15 @@ const getAllPatients = async (query: PatientQueryParams) => {
       throw new ApiError(400, 'invalid doctor id filter');
     }
     filter.doctorId = new Types.ObjectId(query.doctorId);
+  }
+
+  // filter by release status
+  if (query.isReleased !== undefined && query.isReleased !== '') {
+    if (query.isReleased === 'true' || query.isReleased === true) {
+      filter.isReleased = true;
+    } else if (query.isReleased === 'false' || query.isReleased === false) {
+      filter.isReleased = { $ne: true };
+    }
   }
 
   // filter by admission date range
@@ -219,6 +232,55 @@ const deletePatient = async (id: string) => {
   return deletedPatient;
 };
 
+// release patient
+const releasePatient = async (id: string, releaseDate?: string | Date, note?: string) => {
+  if (!Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, 'invalid patient id');
+  }
+
+  const patient = await Patient.findById(id);
+  if (!patient) {
+    throw new ApiError(404, 'patient not found');
+  }
+
+  patient.isReleased = true;
+  patient.releaseDate = releaseDate ? new Date(releaseDate) : new Date();
+  if (note !== undefined && note !== null) {
+    patient.note = note.trim();
+  }
+  await patient.save();
+
+  return patient.populate('doctorId', 'name specialization hospital email phone avatar');
+};
+
+// readmit patient
+const readmitPatient = async (id: string, doctorId?: string) => {
+  if (!Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, 'invalid patient id');
+  }
+
+  const patient = await Patient.findById(id);
+  if (!patient) {
+    throw new ApiError(404, 'patient not found');
+  }
+
+  patient.isReleased = false;
+  patient.releaseDate = null;
+  if (doctorId) {
+    if (!Types.ObjectId.isValid(doctorId)) {
+      throw new ApiError(400, 'invalid doctor id');
+    }
+    const doctorExists = await Doctor.exists({ _id: doctorId });
+    if (!doctorExists) {
+      throw new ApiError(404, 'assigned doctor not found');
+    }
+    patient.doctorId = new Types.ObjectId(doctorId);
+  }
+
+  await patient.save();
+  return patient.populate('doctorId', 'name specialization hospital email phone avatar');
+};
+
 // get list of distinct patient conditions
 const getConditions = async (): Promise<string[]> => {
   const list = await Patient.distinct('condition');
@@ -233,5 +295,7 @@ export const PatientService = {
   updatePatientAvatar,
   deletePatientAvatar,
   deletePatient,
+  releasePatient,
+  readmitPatient,
   getConditions,
 };

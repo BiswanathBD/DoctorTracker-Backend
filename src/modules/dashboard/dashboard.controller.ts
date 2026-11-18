@@ -5,7 +5,8 @@ import { sendResponse } from '../../utils/sendResponse.js';
 // get consolidated dashboard statistics
 const getDashboardStats = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await DashboardService.getDashboardStats();
+    const days = req.query.days ? Number(req.query.days) : 14;
+    const result = await DashboardService.getDashboardStats({ days });
 
     sendResponse(res, {
       statusCode: 200,
