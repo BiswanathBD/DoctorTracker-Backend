@@ -13,7 +13,7 @@ interface IApiResponse<T> {
   };
 }
 
-// success response
+// send response
 export const sendResponse = <T>(res: Response, data: IApiResponse<T>) => {
   const statusCode = data.statusCode || 200;
 

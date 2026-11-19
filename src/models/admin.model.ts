@@ -16,7 +16,7 @@ export interface IAdmin extends Document {
   comparePassword(enteredPassword: string): Promise<boolean>;
 }
 
-// hash password before saving
+// hash password
 adminSchema.pre('save', async function () {
   if (!this.isModified('password')) {
     return;
@@ -25,10 +25,9 @@ adminSchema.pre('save', async function () {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// compare password method
+// compare password
 adminSchema.methods.comparePassword = async function (enteredPassword: string): Promise<boolean> {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// export admin model
 export const Admin = model<IAdmin>('Admin', adminSchema);

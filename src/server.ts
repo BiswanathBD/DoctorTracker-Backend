@@ -30,7 +30,7 @@ const PORT = process.env.PORT || 5000;
 // global middlewares
 const isProduction = process.env.NODE_ENV === 'production';
 
-// parse origin safely (strips /login or trailing slashes)
+// parse origin safely
 const parseOrigin = (urlStr: string) => {
   try {
     return new URL(urlStr.trim()).origin;
@@ -39,7 +39,7 @@ const parseOrigin = (urlStr: string) => {
   }
 };
 
-// in production use CLIENT_URL from env; development use local
+// allowed origins for cors
 const allowedOrigins = isProduction
   ? (process.env.CLIENT_URL || '')
       .split(',')
@@ -50,7 +50,6 @@ const allowedOrigins = isProduction
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow requests with no origin (like mobile apps, curl, postman)
       if (!origin) return callback(null, true);
       const cleanOrigin = parseOrigin(origin);
       if (allowedOrigins.includes(cleanOrigin) || allowedOrigins.length === 0) {
@@ -64,7 +63,7 @@ app.use(
 app.use(express.json());
 app.use(morgan('dev'));
 
-// root welcome route
+// root route
 app.get('/', (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: 200,
@@ -104,10 +103,9 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 let server: Server;
 
-// start server after db connection
+// start server
 const startServer = async () => {
   try {
-    // connect database
     await connectDB();
 
     server = app.listen(PORT, () => {
@@ -121,7 +119,7 @@ const startServer = async () => {
 
 startServer();
 
-// graceful shutdown handler
+// graceful shutdown
 const handleExit = async (signal: string) => {
   console.log(`${signal} received. closing server...`);
   if (server) {
@@ -136,7 +134,7 @@ const handleExit = async (signal: string) => {
   }
 };
 
-// handle unhandled promise rejections
+// unhandled rejection
 process.on('unhandledRejection', async (err: any) => {
   console.error('unhandled rejection detected:', err);
   if (server) {
@@ -150,12 +148,12 @@ process.on('unhandledRejection', async (err: any) => {
   }
 });
 
-// handle uncaught exceptions
+// uncaught exception
 process.on('uncaughtException', (err: any) => {
   console.error('uncaught exception detected:', err);
   process.exit(1);
 });
 
-// handle termination signals
+// termination signals
 process.on('SIGTERM', () => handleExit('sigterm'));
 process.on('SIGINT', () => handleExit('sigint'));

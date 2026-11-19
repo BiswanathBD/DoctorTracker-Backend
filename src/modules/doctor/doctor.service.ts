@@ -16,9 +16,8 @@ interface QueryParams {
   sortOrder?: 'asc' | 'desc';
 }
 
-// create a new doctor
+// create doctor
 const createDoctor = async (payload: Partial<IDoctor>): Promise<IDoctor> => {
-  // check if email already exists
   if (payload.email) {
     const existingDoctor = await Doctor.findOne({ email: payload.email.toLowerCase().trim() });
     if (existingDoctor) {
@@ -30,16 +29,14 @@ const createDoctor = async (payload: Partial<IDoctor>): Promise<IDoctor> => {
   return doctor;
 };
 
-// get all doctors with search, filters, pagination and patient count
+// get all doctors with filters, search and pagination
 const getAllDoctors = async (query: QueryParams) => {
   const page = Math.max(1, Number(query.page) || 1);
   const limit = Math.max(1, Math.min(100, Number(query.limit) || 10));
   const skip = (page - 1) * limit;
 
-  // build match filter
   const filter: Record<string, any> = {};
 
-  // search across name, specialization, hospital, email
   if (query.searchTerm) {
     const searchRegex = new RegExp(query.searchTerm.trim(), 'i');
     filter.$or = [
@@ -50,17 +47,14 @@ const getAllDoctors = async (query: QueryParams) => {
     ];
   }
 
-  // filter by specialization
   if (query.specialization) {
     filter.specialization = { $regex: new RegExp(`^${query.specialization.trim()}$`, 'i') };
   }
 
-  // filter by hospital
   if (query.hospital) {
     filter.hospital = { $regex: new RegExp(`^${query.hospital.trim()}$`, 'i') };
   }
 
-  // filter by date range
   if (query.startDate || query.endDate) {
     filter.createdAt = {};
     if (query.startDate) {
@@ -73,38 +67,39 @@ const getAllDoctors = async (query: QueryParams) => {
     }
   }
 
-  // dynamic sorting
   const sortBy = query.sortBy || 'createdAt';
   const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
   const sortOptions: Record<string, 1 | -1> = { [sortBy]: sortOrder };
 
-  // aggregation pipeline with patient count lookup
-  const doctors = await Doctor.aggregate([
-    { $match: filter },
-    { $sort: sortOptions },
-    { $skip: skip },
-    { $limit: limit },
-    {
-      $lookup: {
-        from: 'patients',
-        localField: '_id',
-        foreignField: 'doctorId',
-        as: 'patients',
+  // fetch doctors aggregation and total count in parallel
+  const [doctors, total] = await Promise.all([
+    Doctor.aggregate([
+      { $match: filter },
+      { $sort: sortOptions },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: 'patients',
+          localField: '_id',
+          foreignField: 'doctorId',
+          as: 'patients',
+        },
       },
-    },
-    {
-      $addFields: {
-        patientCount: { $size: '$patients' },
+      {
+        $addFields: {
+          patientCount: { $size: '$patients' },
+        },
       },
-    },
-    {
-      $project: {
-        patients: 0,
+      {
+        $project: {
+          patients: 0,
+        },
       },
-    },
+    ]),
+    Doctor.countDocuments(filter),
   ]);
 
-  const total = await Doctor.countDocuments(filter);
   const totalPages = Math.ceil(total / limit);
 
   return {
@@ -118,19 +113,21 @@ const getAllDoctors = async (query: QueryParams) => {
   };
 };
 
-// get single doctor by id with assigned patient list
+// get single doctor by id with patients
 const getDoctorById = async (id: string) => {
   if (!Types.ObjectId.isValid(id)) {
     throw new ApiError(400, 'invalid doctor id');
   }
 
-  const doctor = await Doctor.findById(id).lean();
+  // fetch doctor and assigned patients concurrently
+  const [doctor, patients] = await Promise.all([
+    Doctor.findById(id).lean(),
+    Patient.find({ doctorId: id }).sort({ createdAt: -1 }).lean(),
+  ]);
+
   if (!doctor) {
     throw new ApiError(404, 'doctor not found');
   }
-
-  // fetch assigned patients
-  const patients = await Patient.find({ doctorId: id }).sort({ createdAt: -1 }).lean();
 
   return {
     ...doctor,
@@ -145,7 +142,6 @@ const updateDoctor = async (id: string, payload: Partial<IDoctor>): Promise<IDoc
     throw new ApiError(400, 'invalid doctor id');
   }
 
-  // check email conflict if updating email
   if (payload.email) {
     const existing = await Doctor.findOne({
       email: payload.email.toLowerCase().trim(),
@@ -226,13 +222,12 @@ const deleteDoctor = async (id: string): Promise<IDoctor> => {
     await deleteFromCloudinary(deletedDoctor.avatar.key);
   }
 
-  // cascade delete assigned patients
   await Patient.deleteMany({ doctorId: id });
 
   return deletedDoctor;
 };
 
-// add a patient directly under a specific doctor
+// add a patient directly under a doctor
 const addPatientToDoctor = async (doctorId: string, payload: Partial<IPatient>): Promise<IPatient> => {
   if (!Types.ObjectId.isValid(doctorId)) {
     throw new ApiError(400, 'invalid doctor id');
@@ -243,7 +238,6 @@ const addPatientToDoctor = async (doctorId: string, payload: Partial<IPatient>):
     throw new ApiError(404, 'doctor not found');
   }
 
-  // create patient with doctor association
   const patient = await Patient.create({
     ...payload,
     doctorId,
@@ -252,7 +246,7 @@ const addPatientToDoctor = async (doctorId: string, payload: Partial<IPatient>):
   return patient;
 };
 
-// unassign/remove patient from doctor's list without deleting patient data
+// unassign patient from doctor
 const removePatientFromDoctor = async (doctorId: string, patientId: string) => {
   if (!Types.ObjectId.isValid(doctorId) || !Types.ObjectId.isValid(patientId)) {
     throw new ApiError(400, 'invalid doctor id or patient id');
@@ -276,13 +270,13 @@ const removePatientFromDoctor = async (doctorId: string, patientId: string) => {
   return patient;
 };
 
-// get list of distinct specializations
+// get distinct specializations
 const getSpecializations = async (): Promise<string[]> => {
   const list = await Doctor.distinct('specialization');
   return list.sort();
 };
 
-// get list of distinct hospitals
+// get distinct hospitals
 const getHospitals = async (): Promise<string[]> => {
   const list = await Doctor.distinct('hospital');
   return list.sort();

@@ -19,9 +19,8 @@ interface PatientQueryParams {
   sortOrder?: 'asc' | 'desc';
 }
 
-// create a new patient
+// create patient
 const createPatient = async (payload: Partial<IPatient>): Promise<IPatient> => {
-  // if doctorId is provided, verify assigned doctor exists
   if (payload.doctorId) {
     if (!Types.ObjectId.isValid(payload.doctorId.toString())) {
       throw new ApiError(400, 'valid doctor id is required');
@@ -39,16 +38,14 @@ const createPatient = async (payload: Partial<IPatient>): Promise<IPatient> => {
   return populated;
 };
 
-// get all patients with search, filters, and pagination
+// get all patients with search, filters and pagination
 const getAllPatients = async (query: PatientQueryParams) => {
   const page = Math.max(1, Number(query.page) || 1);
   const limit = Math.max(1, Math.min(100, Number(query.limit) || 10));
   const skip = (page - 1) * limit;
 
-  // build match filter
   const filter: Record<string, any> = {};
 
-  // search across name, condition, phone, email
   if (query.searchTerm) {
     const searchRegex = new RegExp(query.searchTerm.trim(), 'i');
     filter.$or = [
@@ -59,17 +56,14 @@ const getAllPatients = async (query: PatientQueryParams) => {
     ];
   }
 
-  // filter by condition
   if (query.condition) {
     filter.condition = { $regex: new RegExp(`^${query.condition.trim()}$`, 'i') };
   }
 
-  // filter by gender
   if (query.gender) {
     filter.gender = query.gender;
   }
 
-  // filter by assigned doctor or unassigned status
   if (
     query.unassigned === 'true' ||
     query.unassigned === true ||
@@ -85,7 +79,6 @@ const getAllPatients = async (query: PatientQueryParams) => {
     filter.doctorId = new Types.ObjectId(query.doctorId);
   }
 
-  // filter by release status
   if (query.isReleased !== undefined && query.isReleased !== '') {
     if (query.isReleased === 'true' || query.isReleased === true) {
       filter.isReleased = true;
@@ -94,7 +87,6 @@ const getAllPatients = async (query: PatientQueryParams) => {
     }
   }
 
-  // filter by admission date range
   if (query.startDate || query.endDate) {
     filter.admissionDate = {};
     if (query.startDate) {
@@ -107,10 +99,10 @@ const getAllPatients = async (query: PatientQueryParams) => {
     }
   }
 
-  // dynamic sorting
   const sortBy = query.sortBy || 'createdAt';
   const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
 
+  // fetch patients and total count in parallel
   const [patients, total] = await Promise.all([
     Patient.find(filter)
       .populate('doctorId', 'name specialization hospital email phone avatar')
@@ -151,13 +143,12 @@ const getPatientById = async (id: string) => {
   return patient;
 };
 
-// update patient by id
+// update patient
 const updatePatient = async (id: string, payload: Partial<IPatient>) => {
   if (!Types.ObjectId.isValid(id)) {
     throw new ApiError(400, 'invalid patient id');
   }
 
-  // if doctorId is being updated, verify target doctor exists
   if (payload.doctorId) {
     if (!Types.ObjectId.isValid(payload.doctorId.toString())) {
       throw new ApiError(400, 'invalid doctor id');
@@ -223,7 +214,7 @@ const deletePatientAvatar = async (patientId: string) => {
   return patient;
 };
 
-// delete patient by id
+// delete patient
 const deletePatient = async (id: string) => {
   if (!Types.ObjectId.isValid(id)) {
     throw new ApiError(400, 'invalid patient id');
@@ -290,7 +281,7 @@ const readmitPatient = async (id: string, doctorId?: string) => {
   return patient.populate('doctorId', 'name specialization hospital email phone avatar');
 };
 
-// get list of distinct patient conditions
+// get distinct conditions
 const getConditions = async (): Promise<string[]> => {
   const list = await Patient.distinct('condition');
   return list.sort();

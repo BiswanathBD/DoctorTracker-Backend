@@ -22,7 +22,6 @@ export const connectDB = async (): Promise<void> => {
       console.warn('mongodb disconnected');
     });
 
-    // connect specifying db name
     await mongoose.connect(uri, {
       dbName: 'doctorTracker',
     });
@@ -32,7 +31,7 @@ export const connectDB = async (): Promise<void> => {
   }
 };
 
-// disconnect mongodb on server shutdown
+// disconnect mongodb
 export const disconnectDB = async (): Promise<void> => {
   try {
     await mongoose.disconnect();

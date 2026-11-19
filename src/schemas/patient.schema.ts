@@ -1,6 +1,6 @@
 import { Schema } from 'mongoose';
 
-// patient schema definition only
+// patient schema
 export const patientSchema = new Schema(
   {
     name: {
@@ -79,7 +79,10 @@ export const patientSchema = new Schema(
 );
 
 // indexes
+patientSchema.index({ doctorId: 1, isReleased: 1 });
 patientSchema.index({ doctorId: 1, createdAt: -1 });
+patientSchema.index({ isReleased: 1, releaseDate: -1 });
+patientSchema.index({ admissionDate: -1 });
 patientSchema.index({ condition: 1, createdAt: -1 });
 patientSchema.index({ name: 'text', condition: 'text', phone: 'text' });
 patientSchema.index({ name: 1, condition: 1 });

@@ -45,12 +45,12 @@ const globalSearch = async (params: GlobalSearchParams) => {
     };
   }
 
-  // escape regex special characters to prevent regex crashes / injection
+  // escape regex characters
   const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const searchRegex = new RegExp(escapedQuery, 'i');
 
   const [doctors, patients] = await Promise.all([
-    // 1. Doctors search: id, avatar (image), name, specialization (specialist), hospital name
+    // search doctors
     type === 'patients'
       ? Promise.resolve([])
       : Doctor.find({
@@ -73,7 +73,7 @@ const globalSearch = async (params: GlobalSearchParams) => {
             }))
           ),
 
-    // 2. Patients search: id, name, condition, isReleased, avatar, doctor name
+    // search patients
     type === 'doctors'
       ? Promise.resolve([])
       : Patient.find({

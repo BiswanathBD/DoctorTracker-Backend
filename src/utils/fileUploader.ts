@@ -2,10 +2,10 @@ import multer from 'multer';
 import { cloudinary } from '../config/cloudinary.js';
 import { ApiError } from './ApiError.js';
 
-// memory storage for file buffers
+// memory storage
 const storage = multer.memoryStorage();
 
-// file filter for images only
+// image filter
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
@@ -14,16 +14,15 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
   }
 };
 
-// multer upload middleware
 export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5mb max
+    fileSize: 5 * 1024 * 1024,
   },
 });
 
-// upload buffer directly to cloudinary
+// upload to cloudinary
 export const uploadToCloudinary = (
   fileBuffer: Buffer,
   folder = 'doctor-tracker/avatars'
@@ -52,7 +51,7 @@ export const uploadToCloudinary = (
   });
 };
 
-// delete image from cloudinary using key (public_id)
+// delete from cloudinary
 export const deleteFromCloudinary = async (key: string): Promise<void> => {
   try {
     if (!key) return;

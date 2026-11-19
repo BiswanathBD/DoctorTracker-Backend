@@ -16,5 +16,4 @@ export interface IDoctor extends Document {
   updatedAt: Date;
 }
 
-// export doctor model
 export const Doctor = model<IDoctor>('Doctor', doctorSchema);

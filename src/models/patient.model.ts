@@ -21,5 +21,4 @@ export interface IPatient extends Document {
   updatedAt: Date;
 }
 
-// export patient model
 export const Patient = model<IPatient>('Patient', patientSchema);

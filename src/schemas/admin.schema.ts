@@ -1,6 +1,6 @@
 import { Schema } from 'mongoose';
 
-// admin schema definition only
+// admin schema
 export const adminSchema = new Schema(
   {
     name: {

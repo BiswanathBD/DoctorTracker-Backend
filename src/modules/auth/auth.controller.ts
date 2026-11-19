@@ -4,24 +4,22 @@ import { sendResponse } from '../../utils/sendResponse.js';
 import { type IAuthRequest } from '../../middlewares/auth.middleware.js';
 import { ApiError } from '../../utils/ApiError.js';
 
-// production-ready http-only cookie configuration
+// cookie options helper
 const getCookieOptions = () => {
   const isProduction = process.env.NODE_ENV === 'production';
   return {
     httpOnly: true,
     secure: isProduction,
     sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000,
     path: '/',
   };
 };
 
-// handle admin registration
+// admin registration
 const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await AuthService.registerAdmin(req.body);
-
-    // set http-only cookie
     res.cookie('token', result.token, getCookieOptions());
 
     sendResponse(res, {
@@ -35,12 +33,10 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-// handle admin login
+// admin login
 const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await AuthService.loginAdmin(req.body);
-
-    // set secure http-only cookie
     res.cookie('token', result.token, getCookieOptions());
 
     sendResponse(res, {
@@ -54,7 +50,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-// handle admin logout
+// admin logout
 const logout = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const isProduction = process.env.NODE_ENV === 'production';
@@ -76,7 +72,7 @@ const logout = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-// handle get current admin profile
+// current admin profile
 const getMe = async (req: IAuthRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
@@ -102,7 +98,7 @@ const getMe = async (req: IAuthRequest, res: Response, next: NextFunction) => {
   }
 };
 
-// handle admin avatar update
+// update admin avatar
 const updateAvatar = async (req: IAuthRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
@@ -126,7 +122,7 @@ const updateAvatar = async (req: IAuthRequest, res: Response, next: NextFunction
   }
 };
 
-// handle admin avatar delete
+// delete admin avatar
 const deleteAvatar = async (req: IAuthRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
