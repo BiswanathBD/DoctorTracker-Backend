@@ -63,6 +63,7 @@ const getDashboardStats = async (options: DashboardQueryOptions = {}) => {
         name: 1,
         specialization: 1,
         hospital: 1,
+        avatar: 1,
         patientCount: { $size: '$assignedPatients' },
       },
     },
@@ -186,6 +187,16 @@ const getDashboardStats = async (options: DashboardQueryOptions = {}) => {
     ]),
   ]);
 
+  // 7. today's live activity report
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const [todayAdmissions, todayDoctors, todayReleased] = await Promise.all([
+    Patient.countDocuments({ admissionDate: { $gte: todayStart } }),
+    Doctor.countDocuments({ createdAt: { $gte: todayStart } }),
+    Patient.countDocuments({ isReleased: true, releaseDate: { $gte: todayStart } }),
+  ]);
+
   return {
     overview: {
       totalDoctors,
@@ -206,6 +217,13 @@ const getDashboardStats = async (options: DashboardQueryOptions = {}) => {
       avgPatientsPerDoctor,
       avgActivePatientsPerActiveDoctor,
       ratioText,
+    },
+    todaysReport: {
+      newAdmissions: todayAdmissions,
+      newDoctors: todayDoctors,
+      releasedToday: todayReleased,
+      activeUnderCare: activePatients,
+      occupancyRate: activePatientPercent,
     },
     timelineDays: days,
     patientsPerDoctor,
