@@ -57,4 +57,7 @@ export const doctorSchema = new Schema(
 
 // indexes
 doctorSchema.index({ name: 'text', specialization: 'text', hospital: 'text', email: 'text' });
+doctorSchema.index({ name: 1, specialization: 1 });
+doctorSchema.index({ hospital: 1, name: 1 });
+doctorSchema.index({ phone: 1 });
 doctorSchema.index({ createdAt: -1 });

@@ -11,6 +11,7 @@ import { AuthRoutes } from './modules/auth/auth.route.js';
 import { DoctorRoutes } from './modules/doctor/doctor.route.js';
 import { PatientRoutes } from './modules/patient/patient.route.js';
 import { DashboardRoutes } from './modules/dashboard/dashboard.route.js';
+import { SearchRoutes } from './modules/search/search.route.js';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -81,6 +82,7 @@ app.use('/api/auth', AuthRoutes);
 app.use('/api/doctors', DoctorRoutes);
 app.use('/api/patients', PatientRoutes);
 app.use('/api/dashboard', DashboardRoutes);
+app.use('/api/search', SearchRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response, next: NextFunction) => {
