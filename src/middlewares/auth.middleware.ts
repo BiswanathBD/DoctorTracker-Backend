@@ -8,13 +8,34 @@ export interface IAuthRequest extends Request {
   user?: IAdmin;
 }
 
-// protect routes with jwt and admin role verification
+// parse raw cookie header string safely without third-party dependencies
+const parseCookies = (cookieHeader?: string): Record<string, string> => {
+  if (!cookieHeader) return {};
+  const cookies: Record<string, string> = {};
+  cookieHeader.split(';').forEach((part) => {
+    const [rawKey, ...rawVal] = part.trim().split('=');
+    if (rawKey) {
+      cookies[rawKey.trim()] = decodeURIComponent(rawVal.join('='));
+    }
+  });
+  return cookies;
+};
+
+// protect routes with jwt and admin role verification (supports HTTP-only cookies and Bearer headers)
 export const protect = async (req: IAuthRequest, res: Response, next: NextFunction) => {
   try {
     let token: string | undefined;
 
-    // check bearer token in authorization header
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    // 1. check http-only cookie (parsed or raw header)
+    if (req.cookies?.token) {
+      token = req.cookies.token;
+    } else if (req.headers.cookie) {
+      const parsed = parseCookies(req.headers.cookie);
+      token = parsed.token;
+    }
+
+    // 2. fallback: check bearer token in authorization header
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
       token = req.headers.authorization.split(' ')[1];
     }
 

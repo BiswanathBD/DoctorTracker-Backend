@@ -4,10 +4,25 @@ import { sendResponse } from '../../utils/sendResponse.js';
 import { type IAuthRequest } from '../../middlewares/auth.middleware.js';
 import { ApiError } from '../../utils/ApiError.js';
 
+// production-ready http-only cookie configuration
+const getCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  return {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    path: '/',
+  };
+};
+
 // handle admin registration
 const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await AuthService.registerAdmin(req.body);
+
+    // set http-only cookie
+    res.cookie('token', result.token, getCookieOptions());
 
     sendResponse(res, {
       statusCode: 201,
@@ -25,11 +40,36 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await AuthService.loginAdmin(req.body);
 
+    // set secure http-only cookie
+    res.cookie('token', result.token, getCookieOptions());
+
     sendResponse(res, {
       statusCode: 200,
       success: true,
       message: 'login successful',
       data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// handle admin logout
+const logout = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
+      path: '/',
+    });
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'logout successful',
+      data: null,
     });
   } catch (error) {
     next(error);
@@ -109,6 +149,7 @@ const deleteAvatar = async (req: IAuthRequest, res: Response, next: NextFunction
 export const AuthController = {
   register,
   login,
+  logout,
   getMe,
   updateAvatar,
   deleteAvatar,
