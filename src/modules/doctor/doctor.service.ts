@@ -252,16 +252,22 @@ const addPatientToDoctor = async (doctorId: string, payload: Partial<IPatient>):
   return patient;
 };
 
-// remove patient from doctor's list
+// unassign/remove patient from doctor's list without deleting patient data
 const removePatientFromDoctor = async (doctorId: string, patientId: string) => {
   if (!Types.ObjectId.isValid(doctorId) || !Types.ObjectId.isValid(patientId)) {
     throw new ApiError(400, 'invalid doctor id or patient id');
   }
 
-  const patient = await Patient.findOneAndDelete({
-    _id: patientId,
-    doctorId,
-  });
+  const patient = await Patient.findOneAndUpdate(
+    {
+      _id: patientId,
+      doctorId,
+    },
+    {
+      $set: { doctorId: null },
+    },
+    { new: true }
+  );
 
   if (!patient) {
     throw new ApiError(404, 'patient not found under this doctor');

@@ -11,6 +11,7 @@ interface PatientQueryParams {
   condition?: string;
   gender?: string;
   doctorId?: string;
+  unassigned?: string | boolean;
   startDate?: string;
   endDate?: string;
   isReleased?: string | boolean;
@@ -68,8 +69,16 @@ const getAllPatients = async (query: PatientQueryParams) => {
     filter.gender = query.gender;
   }
 
-  // filter by assigned doctor
-  if (query.doctorId) {
+  // filter by assigned doctor or unassigned status
+  if (
+    query.unassigned === 'true' ||
+    query.unassigned === true ||
+    query.doctorId === 'unassigned' ||
+    query.doctorId === 'null' ||
+    query.doctorId === 'none'
+  ) {
+    filter.doctorId = null;
+  } else if (query.doctorId) {
     if (!Types.ObjectId.isValid(query.doctorId)) {
       throw new ApiError(400, 'invalid doctor id filter');
     }
