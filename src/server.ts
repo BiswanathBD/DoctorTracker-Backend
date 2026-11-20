@@ -42,9 +42,9 @@ const parseOrigin = (urlStr: string) => {
 // allowed origins for cors
 const allowedOrigins = isProduction
   ? (process.env.CLIENT_URL || '')
-      .split(',')
-      .map(parseOrigin)
-      .filter(Boolean)
+    .split(',')
+    .map(parseOrigin)
+    .filter(Boolean)
   : ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
 app.use(
@@ -75,6 +75,19 @@ app.get('/', (req: Request, res: Response) => {
     message: 'welcome to doctor tracker api',
     data: {
       documentation: '/',
+      version: '1.0.0',
+    },
+  });
+});
+
+// api route
+app.get('/api', (req: Request, res: Response) => {
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Doctor tracker api is running successfully',
+    data: {
+      documentation: '/api',
       version: '1.0.0',
     },
   });
