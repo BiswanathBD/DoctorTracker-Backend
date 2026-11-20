@@ -15,7 +15,13 @@ const parseCookies = (cookieHeader?: string): Record<string, string> => {
   cookieHeader.split(';').forEach((part) => {
     const [rawKey, ...rawVal] = part.trim().split('=');
     if (rawKey) {
-      cookies[rawKey.trim()] = decodeURIComponent(rawVal.join('='));
+      const key = rawKey.trim();
+      const val = rawVal.join('=');
+      try {
+        cookies[key] = decodeURIComponent(val);
+      } catch {
+        cookies[key] = val;
+      }
     }
   });
   return cookies;

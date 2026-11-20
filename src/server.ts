@@ -51,6 +51,10 @@ app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
+      // In development, allow localhost, 127.0.0.1, or local network IPs (for mobile device testing)
+      if (!isProduction) {
+        return callback(null, true);
+      }
       const cleanOrigin = parseOrigin(origin);
       if (allowedOrigins.includes(cleanOrigin) || allowedOrigins.length === 0) {
         return callback(null, true);
