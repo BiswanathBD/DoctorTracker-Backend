@@ -41,7 +41,7 @@ const parseOrigin = (urlStr: string) => {
 
 // allowed origins for cors
 const allowedOrigins = isProduction
-  ? (process.env.CLIENT_URL || '')
+  ? (process.env.CLIENT_URL || 'https://doctor-traker.netlify.app')
     .split(',')
     .map(parseOrigin)
     .filter(Boolean)
