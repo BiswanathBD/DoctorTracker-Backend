@@ -41,8 +41,10 @@ const parseOrigin = (urlStr: string) => {
 
 // allowed origins for cors
 const allowedOrigins = isProduction
-  ? (process.env.CLIENT_URL || 'https://doctor-traker.netlify.app')
-    .split(',')
+  ? [
+    ...(process.env.CLIENT_URL || '').split(','),
+    'https://doctor-traker.netlify.app',
+  ]
     .map(parseOrigin)
     .filter(Boolean)
   : ['http://localhost:3000', 'http://127.0.0.1:3000'];
